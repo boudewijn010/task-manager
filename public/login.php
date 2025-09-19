@@ -2,11 +2,12 @@
 session_start();
 
 // DB settings - keep in sync with index.php
-$host = "127.0.0.1";
-$user = "root";
-$pass = "";
+$host = "127.0.0.1";    // meestal localhost bij XAMPP
+$user = "root";         // standaard XAMPP user
+$pass = "";             // standaard leeg wachtwoord
 $dbname = "gemeente-app-db";
 
+// Maak PDO connectie (de rest van het bestand verwacht PDO via $db)
 try {
     $dsn = "mysql:host={$host};dbname={$dbname};charset=utf8mb4";
     $db = new PDO($dsn, $user, $pass, [
@@ -14,33 +15,55 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
+    // echo "Connectie gelukt!";
 } catch (PDOException $e) {
-    die('Database connectie mislukt: ' . $e->getMessage());
+    // Friendly message; in productie log the real error instead
+    die("Connectie mislukt: " . $e->getMessage());
 }
-
 // If already logged in, redirect
 if (!empty($_SESSION['user_id'])) {
     header('Location: /');
     exit;
 }
 
-$error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
+// CSRF token generation/validation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+}
 
-    if ($email && $password) {
-        // Try to find user in users table
+$error = '';
+$submittedEmail = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $submittedEmail = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+    $token = $_POST['csrf_token'] ?? '';
+
+    if (!hash_equals($_SESSION['csrf_token'], $token)) {
+        $error = 'Ongeldige CSRF-token.';
+    } elseif (!$submittedEmail || !$password) {
+        $error = 'Vul email en wachtwoord in.';
+    } else {
+        // Check if users table exists
+        $usersTableExists = false;
         try {
-            $stmt = $db->prepare('SELECT id, email, password FROM users WHERE email = ? LIMIT 1');
-            $stmt->execute([$email]);
-            $userRow = $stmt->fetch();
+            $res = $db->query("SHOW TABLES LIKE 'users'");
+            $usersTableExists = ($res && $res->rowCount() > 0);
         } catch (Exception $e) {
-            $userRow = false;
+            $usersTableExists = false;
+        }
+
+        $userRow = false;
+        if ($usersTableExists) {
+            try {
+                $stmt = $db->prepare('SELECT id, email, password FROM users WHERE email = ? LIMIT 1');
+                $stmt->execute([$submittedEmail]);
+                $userRow = $stmt->fetch();
+            } catch (Exception $e) {
+                $userRow = false;
+            }
         }
 
         if ($userRow) {
-            // Expect password to be hashed with password_hash
             if (password_verify($password, $userRow['password'])) {
                 $_SESSION['user_id'] = $userRow['id'];
                 $_SESSION['user_email'] = $userRow['email'];
@@ -50,17 +73,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'Ongeldig wachtwoord.';
             }
         } else {
-            // Fallback: if no users table or user not found, allow root with empty password (development only)
-            if ($email === 'root' && $password === '') {
-                $_SESSION['user_id'] = 0;
-                $_SESSION['user_email'] = 'root';
-                header('Location: /');
-                exit;
+            if (!$usersTableExists) {
+                // Development fallback only when users table is missing
+                if ($submittedEmail === 'root' && $password === '') {
+                    $_SESSION['user_id'] = 0;
+                    $_SESSION['user_email'] = 'root';
+                    header('Location: /');
+                    exit;
+                }
+                $error = 'Geen gebruikers gevonden in database; gebruik fallback (root / leeg) of maak users table aan.';
+            } else {
+                $error = 'Gebruiker niet gevonden.';
             }
-            $error = 'Gebruiker niet gevonden.';
         }
-    } else {
-        $error = 'Vul email en wachtwoord in.';
     }
 }
 
@@ -99,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <button class="btn btn-primary" type="submit">Login</button>
                         </div>
                     </form>
+                    <a href="register.php" class="btn btn-link mt-3">Maak een account aan</a>
                 </div>
             </div>
         </div>

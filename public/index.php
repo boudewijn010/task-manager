@@ -86,6 +86,7 @@ try {
                     <div class="navbar-nav ms-auto">
                         <a class="nav-link" href="/">All Tasks</a>
                         <a class="nav-link" href="/tasks/create">Add Task</a>
+                        <a class="nav-link" href="/login.php">inloggen</a>
                     </div>
                 </div>
             </nav>
