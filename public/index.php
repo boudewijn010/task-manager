@@ -1,8 +1,27 @@
 <?php
 
 // Simple standalone version since Laravel routing isn't working
-// Connect to SQLite database
-$db = new PDO('sqlite:' . __DIR__ . '/../database/database.sqlite');
+// Connect to MySQL (XAMPP)
+
+$host = "127.0.0.1";    // meestal localhost bij XAMPP
+$user = "root";         // standaard XAMPP user
+$pass = "";             // standaard leeg wachtwoord
+$dbname = "gemeente-app-db";
+
+// Maak PDO connectie (de rest van het bestand verwacht PDO via $db)
+try {
+    $dsn = "mysql:host={$host};dbname={$dbname};charset=utf8mb4";
+    $db = new PDO($dsn, $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+    // echo "Connectie gelukt!";
+} catch (PDOException $e) {
+    // Friendly message; in productie log the real error instead
+    die("Connectie mislukt: " . $e->getMessage());
+}
+
 
 // Get current path
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);

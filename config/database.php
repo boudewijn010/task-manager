@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'mysql'),
+    'migrations' => env('DB_MIGRATIONS', 'migrations'),
     
     'connections' => [
         'sqlite' => [
