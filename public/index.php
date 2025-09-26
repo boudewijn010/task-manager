@@ -170,6 +170,7 @@ try {
                                             </div>
                                         </div>
                                     </div>
+                                    <div></div>
 
                                     <div class="card-footer text-muted">
                                         <small>Created <?= date('M d, Y', strtotime($task['created_at'])) ?></small>
