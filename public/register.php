@@ -56,8 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $db->prepare("INSERT INTO gebruikers (name, password, completed) VALUES (?, ?, ?)");
             $stmt->execute([$email, $hashedPassword, 0]);
 
-            $success = "Account succesvol aangemaakt!";
-            $old['email'] = '';
+            // Redirect to login page after successful registration
+            header('Location: /login.php');
+            exit;
         }
     }
 }
