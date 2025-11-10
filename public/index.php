@@ -1,14 +1,11 @@
 <?php
 
-// Simple standalone version since Laravel routing isn't working
-// Connect to MySQL (XAMPP)
 
-$host = "127.0.0.1";    // meestal localhost bij XAMPP
-$user = "root";         // standaard XAMPP user
-$pass = "";             // standaard leeg wachtwoord
+$host = "127.0.0.1";
+$user = "root";
+$pass = "";
 $dbname = "gemeente-app-db";
 
-// Maak PDO connectie (de rest van het bestand verwacht PDO via $db)
 try {
     $dsn = "mysql:host={$host};dbname={$dbname};charset=utf8mb4";
     $db = new PDO($dsn, $user, $pass, [
@@ -16,18 +13,14 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
-    // echo "Connectie gelukt!";
 } catch (PDOException $e) {
-    // Friendly message; in productie log the real error instead
     die("Connectie mislukt: " . $e->getMessage());
 }
 
 
-// Get current path
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Helper function to get tasks
 function getTasks($db, $status = null)
 {
     if ($status) {
@@ -39,7 +32,6 @@ function getTasks($db, $status = null)
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-// Helper function to render view
 function renderView($view, $data = [])
 {
     extract($data);
@@ -48,7 +40,6 @@ function renderView($view, $data = [])
     return ob_get_clean();
 }
 
-// Helper function to get task by ID
 function getTask($db, $id)
 {
     $stmt = $db->prepare('SELECT * FROM tasks WHERE id = ?');
@@ -56,15 +47,11 @@ function getTask($db, $id)
     return $stmt->fetch(PDO::FETCH_ASSOC);
 }
 
-// Route handling
 try {
-    // Handle different routes
     if ($path === '/' || $path === '/tasks') {
-        // Show task list
         $status = $_GET['status'] ?? null;
         $tasks = getTasks($db, $status);
 
-        // Simple HTML output since we can't use Blade easily
         ?>
         <!DOCTYPE html>
         <html lang="en">
@@ -99,7 +86,6 @@ try {
                     </a>
                 </div>
 
-                <!-- Filter buttons -->
                 <div class="mb-3">
                     <div class="btn-group" role="group">
                         <a href="/" class="btn <?= !$status ? 'btn-primary' : 'btn-outline-primary' ?>">All Tasks</a>
