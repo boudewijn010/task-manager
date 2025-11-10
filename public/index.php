@@ -48,131 +48,211 @@ function getTask($db, $id)
 }
 
 try {
-    if ($path === '/' || $path === '/tasks') {
-        $status = $_GET['status'] ?? null;
-        $tasks = getTasks($db, $status);
-
+    // Handle different routes
+    if ($path === '/') {
+        // Show landing page
         ?>
         <!DOCTYPE html>
-        <html lang="en">
-
+        <html lang="nl">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Task Manager</title>
+            <title>Welkom bij Task Manager</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
             <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+            <style>
+                .hero-section {
+                    background: linear-gradient(135deg, #0d6efd 0%, #0dcaf0 100%);
+                    color: white;
+                    padding: 100px 0;
+                }
+                .feature-icon {
+                    font-size: 3rem;
+                    margin-bottom: 1rem;
+                    color: #0d6efd;
+                }
+            </style>
         </head>
-
         <body>
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
                 <div class="container">
                     <a class="navbar-brand" href="/">
                         <i class="fas fa-tasks"></i> Task Manager
                     </a>
                     <div class="navbar-nav ms-auto">
-                        <a class="nav-link" href="/">All Tasks</a>
-                        <a class="nav-link" href="/tasks/create">Add Task</a>
-                        <a class="nav-link" href="/login.php">inloggen</a>
+                        <a class="nav-link" href="/login.php">
+                            <i class="fas fa-sign-in-alt"></i> Inloggen
+                        </a>
                     </div>
                 </div>
             </nav>
 
-            <div class="container mt-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h1><i class="fas fa-list"></i> My Tasks</h1>
-                    <a href="/tasks/create" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add New Task
-                    </a>
-                </div>
-
-                <div class="mb-3">
-                    <div class="btn-group" role="group">
-                        <a href="/" class="btn <?= !$status ? 'btn-primary' : 'btn-outline-primary' ?>">All Tasks</a>
-                        <a href="/?status=pending"
-                            class="btn <?= $status == 'pending' ? 'btn-warning' : 'btn-outline-warning' ?>">Pending</a>
-                        <a href="/?status=in_progress"
-                            class="btn <?= $status == 'in_progress' ? 'btn-info' : 'btn-outline-info' ?>">In Progress</a>
-                        <a href="/?status=completed"
-                            class="btn <?= $status == 'completed' ? 'btn-success' : 'btn-outline-success' ?>">Completed</a>
+            <!-- Hero Section -->
+            <div class="hero-section">
+                <div class="container text-center">
+                    <h1 class="display-4 mb-4">Welkom bij Task Manager</h1>
+                    <p class="lead mb-4">Beheer uw taken en klachten op één centrale plek</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="/create-melding.php" class="btn btn-light btn-lg px-4">
+                            <i class="fas fa-plus-circle"></i> Nieuwe Melding
+                        </a>
+                        <a href="/login.php" class="btn btn-outline-light btn-lg px-4">
+                            <i class="fas fa-sign-in-alt"></i> Inloggen
+                        </a>
                     </div>
                 </div>
+            </div>
 
-                <?php if (!empty($tasks)): ?>
+            <!-- Features Section -->
+            <div class="container py-5">
+                <div class="row g-4">
+                    <div class="col-md-4 text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <h3>Taakbeheer</h3>
+                        <p>Houd al uw taken overzichtelijk bij en volg de voortgang</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <h3>Klachtenbeheer</h3>
+                        <p>Registreer en volg klachten efficiënt op</p>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Voortgang Monitoren</h3>
+                        <p>Bekijk statistieken en voortgang in één oogopslag</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Call to Action -->
+            <div class="bg-light py-5">
+                <div class="container text-center">
+                    <h2>Klaar om te beginnen?</h2>
+                    <p class="lead mb-4">Log in om uw taken en klachten te beheren</p>
+                    <a href="/login.php" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> Inloggen
+                    </a>
+                </div>
+            </div>
+        </body>
+        </html>
+        <?php
+    } elseif ($path === '/tasks') {
+        // Check if user is logged in
+        session_start();
+        if (empty($_SESSION['user_id'])) {
+            header('Location: /login.php');
+            exit;
+        }
+        
+        // Show task list for logged in users
+        $status = $_GET['status'] ?? null;
+        $tasks = getTasks($db, $status);
+
+        // Also load complaints so they can be managed from the /tasks page
+        try {
+            $stmt = $db->query('SELECT * FROM complaints ORDER BY created_at DESC');
+            $complaints = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            $complaints = [];
+        }
+
+        ?>
+        <!DOCTYPE html>
+        <html lang="nl">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Task Manager - Taken</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+        </head>
+        <body>
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                <div class="container">
+                    <a class="navbar-brand" href="/dashboard.php">
+                        <i class="fas fa-tasks"></i> Task Manager
+                    </a>
+                    <div class="navbar-nav">
+                        <a class="nav-link" href="/dashboard.php">
+                            <i class="fas fa-home"></i> Dashboard
+                        </a>
+                        <a class="nav-link" href="/tasks">
+                            <i class="fas fa-list"></i> Taken
+                        </a>
+                    </div>
+                    <div class="navbar-nav ms-auto">
+                        <a class="nav-link" href="/login.php?logout=1">
+                            <i class="fas fa-sign-out-alt"></i> Uitloggen
+                        </a>
+                    </div>
+                </div>
+            </nav>
+             <!-- DIT zIJN DE Klachten  -->
+                <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+                    <h2><i class="fas fa-exclamation-circle text-danger"></i> Klachten</h2>
+                    <a href="/complaints" class="btn btn-outline-danger">Alle klachten</a>
+                </div>
+
+                <?php if (!empty($complaints)): ?>
                     <div class="row">
-                        <?php foreach ($tasks as $task): ?>
+                        <?php foreach ($complaints as $c): ?>
                             <div class="col-md-6 col-lg-4 mb-3">
                                 <div class="card h-100">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h5 class="card-title"><?= htmlspecialchars($task['title']) ?></h5>
-                                            <span
-                                                class="badge bg-<?= $task['priority'] == 'high' ? 'danger' : ($task['priority'] == 'medium' ? 'warning' : 'secondary') ?>">
-                                                <?= ucfirst($task['priority']) ?>
+                                            <h5 class="card-title"><?= htmlspecialchars($c['title']) ?></h5>
+                                            <span class="badge bg-<?= $c['priority'] == 'high' ? 'danger' : ($c['priority'] == 'medium' ? 'warning' : 'secondary') ?>">
+                                                <?= ucfirst($c['priority']) ?>
                                             </span>
                                         </div>
 
-                                        <p class="card-text text-muted">
-                                            <?= htmlspecialchars(substr($task['description'] ?? '', 0, 100)) ?>
-                                        </p>
+                                        <p class="card-text text-muted"><?= htmlspecialchars(substr($c['description'] ?? '', 0, 120)) ?></p>
 
                                         <div class="mb-3">
-                                            <span
-                                                class="badge bg-<?= $task['status'] == 'completed' ? 'success' : ($task['status'] == 'in_progress' ? 'info' : 'warning') ?>">
-                                                <?= ucfirst(str_replace('_', ' ', $task['status'])) ?>
+                                            <span class="badge bg-<?= $c['status'] == 'resolved' ? 'success' : ($c['status'] == 'in_progress' ? 'info' : 'danger') ?>">
+                                                <?= ucfirst(str_replace('_', ' ', $c['status'])) ?>
                                             </span>
                                         </div>
 
-                                        <?php if ($task['due_date']): ?>
-                                            <p class="card-text">
-                                                <small class="text-muted">
-                                                    <i class="fas fa-calendar"></i>
-                                                    Due: <?= date('M d, Y', strtotime($task['due_date'])) ?>
-                                                </small>
-                                            </p>
-                                        <?php endif; ?>
+                                        <p class="card-text"><small class="text-muted">Contact: <?= htmlspecialchars($c['contact_email']) ?></small></p>
 
                                         <div class="d-flex justify-content-between">
                                             <div>
-                                                <a href="/tasks/<?= $task['id'] ?>" class="btn btn-sm btn-outline-info">
+                                                <a href="/complaints/<?= $c['id'] ?>" class="btn btn-sm btn-outline-info">
                                                     <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="/tasks/<?= $task['id'] ?>/edit" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-edit"></i>
                                                 </a>
                                             </div>
 
                                             <div>
-                                                <?php if ($task['status'] !== 'completed'): ?>
-                                                    <a href="/tasks/<?= $task['id'] ?>/complete" class="btn btn-sm btn-success">
-                                                        <i class="fas fa-check"></i>
+                                                <?php if ($c['status'] !== 'resolved'): ?>
+                                                    <a href="/complaints/<?= $c['id'] ?>/complete" class="btn btn-sm btn-success" onclick="return confirm('Markeer deze klacht als afgehandeld?')">
+                                                        <i class="fas fa-check"></i> Afhandelen
                                                     </a>
+                                                <?php else: ?>
+                                                    <span class="text-success">Afgehandeld</span>
                                                 <?php endif; ?>
-
-                                                <a href="/tasks/<?= $task['id'] ?>/delete" class="btn btn-sm btn-outline-danger"
-                                                    onclick="return confirm('Are you sure you want to delete this task?')">
-                                                    <i class="fas fa-trash"></i>
-                                                </a>
                                             </div>
                                         </div>
                                     </div>
-                                    <div></div>
-
                                     <div class="card-footer text-muted">
-                                        <small>Created <?= date('M d, Y', strtotime($task['created_at'])) ?></small>
+                                        <small>Ingediend <?= date('M d, Y', strtotime($c['created_at'])) ?></small>
                                     </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <div class="text-center py-5">
-                        <i class="fas fa-tasks fa-5x text-muted mb-3"></i>
-                        <h3>No Tasks Found</h3>
-                        <p class="text-muted">Start by creating your first task!</p>
-                        <a href="/tasks/create" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Create Your First Task
-                        </a>
+                    <div class="text-center py-4">
+                        <i class="fas fa-exclamation-circle fa-4x text-muted mb-3"></i>
+                        <h4>Geen klachten gevonden</h4>
+                        <p class="text-muted">Er zijn momenteel geen geregistreerde klachten.</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -197,115 +277,82 @@ try {
         header('Location: /');
         exit;
 
-    } elseif ($path === '/tasks/create') {
-        if ($method === 'POST') {
-            // Handle task creation
-            $title = $_POST['title'] ?? '';
-            $description = $_POST['description'] ?? '';
-            $status = $_POST['status'] ?? 'pending';
-            $priority = $_POST['priority'] ?? 'medium';
-            $due_date = $_POST['due_date'] ?? null;
-
-            if ($title) {
-                $stmt = $db->prepare('INSERT INTO tasks (title, description, status, priority, due_date) VALUES (?, ?, ?, ?, ?)');
-                $stmt->execute([$title, $description, $status, $priority, $due_date]);
-                header('Location: /');
-                exit;
-            }
+    } elseif (preg_match('/^\/complaints\/(\d+)\/complete$/', $path, $matches)) {
+        // Mark complaint as resolved
+        $id = $matches[1];
+        try {
+            $stmt = $db->prepare("UPDATE complaints SET status = 'resolved' WHERE id = ?");
+            $stmt->execute([$id]);
+        } catch (Exception $e) {
+            // ignore
+        }
+        header('Location: /tasks');
+        exit;
+    } elseif (preg_match('/^\/complaints\/(\d+)$/', $path, $matches)) {
+        // Show single complaint with map (if location available)
+        $id = (int) $matches[1];
+        try {
+            $stmt = $db->prepare('SELECT * FROM complaints WHERE id = ? LIMIT 1');
+            $stmt->execute([$id]);
+            $complaint = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            $complaint = false;
         }
 
-        // Show create form
+        if (!$complaint) {
+            http_response_code(404);
+            echo "<h1>Klacht niet gevonden</h1>";
+            exit;
+        }
+
         ?>
         <!DOCTYPE html>
-        <html lang="en">
-
+        <html lang="nl">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Create Task - Task Manager</title>
+            <title>Klacht #<?= htmlspecialchars($complaint['id']) ?> - Task Manager</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
             <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+            <style>#complaint-map { height: 400px; }</style>
         </head>
-
-        <body>
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-                <div class="container">
-                    <a class="navbar-brand" href="/">
-                        <i class="fas fa-tasks"></i> Task Manager
-                    </a>
-                    <div class="navbar-nav ms-auto">
-                        <a class="nav-link" href="/">All Tasks</a>
-                        <a class="nav-link" href="/tasks/create">Add Task</a>
+        <body class="bg-light">
+            <div class="container py-4">
+                <a href="/tasks" class="btn btn-link">← Terug naar taken</a>
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h4><?= htmlspecialchars($complaint['title']) ?></h4>
                     </div>
-                </div>
-            </nav>
+                    <div class="card-body">
+                        <p><?= nl2br(htmlspecialchars($complaint['description'])) ?></p>
+                        <p><strong>Type:</strong> <?= htmlspecialchars($complaint['type']) ?> • <strong>Prioriteit:</strong> <?= htmlspecialchars($complaint['priority']) ?></p>
+                        <p><strong>Contact:</strong> <?= htmlspecialchars($complaint['contact_email']) ?></p>
+                        <?php if (!empty($complaint['address'])): ?>
+                            <p><strong>Adres:</strong> <?= htmlspecialchars($complaint['address']) ?></p>
+                        <?php endif; ?>
 
-            <div class="container mt-4">
-                <div class="row justify-content-center">
-                    <div class="col-md-8">
-                        <div class="card">
-                            <div class="card-header">
-                                <h4><i class="fas fa-plus"></i> Create New Task</h4>
-                            </div>
-                            <div class="card-body">
-                                <form method="POST" action="/tasks/create">
-                                    <div class="mb-3">
-                                        <label for="title" class="form-label">Task Title</label>
-                                        <input type="text" class="form-control" id="title" name="title" required>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="description" class="form-label">Description</label>
-                                        <textarea class="form-control" id="description" name="description" rows="4"></textarea>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="status" class="form-label">Status</label>
-                                                <select class="form-select" id="status" name="status" required>
-                                                    <option value="pending">Pending</option>
-                                                    <option value="in_progress">In Progress</option>
-                                                    <option value="completed">Completed</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-6">
-                                            <div class="mb-3">
-                                                <label for="priority" class="form-label">Priority</label>
-                                                <select class="form-select" id="priority" name="priority" required>
-                                                    <option value="low">Low</option>
-                                                    <option value="medium" selected>Medium</option>
-                                                    <option value="high">High</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="due_date" class="form-label">Due Date</label>
-                                        <input type="datetime-local" class="form-control" id="due_date" name="due_date">
-                                    </div>
-
-                                    <div class="d-flex justify-content-between">
-                                        <a href="/" class="btn btn-secondary">
-                                            <i class="fas fa-arrow-left"></i> Back to Tasks
-                                        </a>
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save"></i> Create Task
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
+                        <?php if (!empty($complaint['latitude']) && !empty($complaint['longitude'])): ?>
+                            <div id="complaint-map"></div>
+                        <?php else: ?>
+                            <div class="alert alert-secondary">Geen locatie opgeslagen voor deze klacht.</div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <?php if (!empty($complaint['latitude']) && !empty($complaint['longitude'])): ?>
+            <script>
+                var map = L.map('complaint-map').setView([<?= (float)$complaint['latitude'] ?>, <?= (float)$complaint['longitude'] ?>], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+                L.marker([<?= (float)$complaint['latitude'] ?>, <?= (float)$complaint['longitude'] ?>]).addTo(map);
+            </script>
+            <?php endif; ?>
         </body>
-
         </html>
         <?php
+        exit;
+    
 
     } else {
         // 404 for other routes
