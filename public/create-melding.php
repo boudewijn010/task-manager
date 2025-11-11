@@ -29,13 +29,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address = $_POST['address'] ?? null;
     $latitude = $_POST['latitude'] ?? null;
     $longitude = $_POST['longitude'] ?? null;
+    $photo_path = null;
 
     if ($title && $description && $contact_email) {
         try {
-            $stmt = $db->prepare('INSERT INTO complaints (title, description, type, priority, contact_email, address, latitude, longitude, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, "new")');
-            $stmt->execute([$title, $description, $type, $priority, $contact_email, $address, $latitude, $longitude]);
-            
-            $success = "Uw melding is succesvol ingediend. We nemen contact met u op via het opgegeven e-mailadres.";
+            // Add photo_path column if it doesn't exist
+            try {
+                $db->exec("ALTER TABLE complaints ADD COLUMN photo_path VARCHAR(255) NULL");
+            } catch (Exception $e) {
+                // Column might already exist, ignore error
+            }
+
+            // Handle photo upload
+            if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/uploads/';
+                $allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                $maxFileSize = 5 * 1024 * 1024; // 5MB
+                
+                $fileType = $_FILES['photo']['type'];
+                $fileSize = $_FILES['photo']['size'];
+                
+                if (in_array($fileType, $allowedTypes) && $fileSize <= $maxFileSize) {
+                    $fileExtension = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
+                    $newFileName = uniqid('photo_', true) . '.' . $fileExtension;
+                    $uploadPath = $uploadDir . $newFileName;
+                    
+                    if (move_uploaded_file($_FILES['photo']['tmp_name'], $uploadPath)) {
+                        $photo_path = 'uploads/' . $newFileName;
+                    }
+                } else {
+                    $error = "Ongeldige foto. Alleen JPG, PNG of GIF tot 5MB toegestaan.";
+                }
+            }
+
+            if (!isset($error)) {
+                $stmt = $db->prepare('INSERT INTO complaints (title, description, type, priority, contact_email, address, latitude, longitude, photo_path, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, "new")');
+                $stmt->execute([$title, $description, $type, $priority, $contact_email, $address, $latitude, $longitude, $photo_path]);
+                
+                $success = "Uw melding is succesvol ingediend. We nemen contact met u op via het opgegeven e-mailadres.";
+            }
         } catch (Exception $e) {
             $error = "Er is een fout opgetreden bij het indienen van uw melding. Probeer het later opnieuw.";
         }
@@ -87,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         <?php endif; ?>
 
-                        <form method="POST" action="/create-melding.php">
+                        <form method="POST" action="/create-melding.php" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label for="title" class="form-label">Onderwerp *</label>
                                 <input type="text" class="form-control" id="title" name="title" required>
@@ -106,6 +138,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label for="description" class="form-label">Beschrijving *</label>
                                 <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
                                 <div class="form-text">Beschrijf uw melding zo duidelijk mogelijk.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="photo" class="form-label">Foto (optioneel)</label>
+                                <input type="file" class="form-control" id="photo" name="photo" accept="image/jpeg,image/jpg,image/png,image/gif">
+                                <div class="form-text">Upload een foto van de situatie (max 5MB, JPG/PNG/GIF)</div>
                             </div>
 
                             <div class="mb-3">

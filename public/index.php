@@ -215,6 +215,12 @@ try {
 
                                         <p class="card-text text-muted"><?= htmlspecialchars(substr($c['description'] ?? '', 0, 120)) ?></p>
 
+                                        <?php if (!empty($c['photo_path'])): ?>
+                                            <div class="mb-3">
+                                                <img src="/<?= htmlspecialchars($c['photo_path']) ?>" alt="Melding foto" class="img-fluid rounded" style="max-height: 200px; width: auto;">
+                                            </div>
+                                        <?php endif; ?>
+
                                         <div class="mb-3">
                                             <span class="badge bg-<?= $c['status'] == 'resolved' ? 'success' : ($c['status'] == 'in_progress' ? 'info' : 'danger') ?>">
                                                 <?= ucfirst(str_replace('_', ' ', $c['status'])) ?>
