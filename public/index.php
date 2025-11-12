@@ -212,6 +212,7 @@ try {
                 </div>
             </nav>
              <!-- DIT zIJN DE Klachten  -->
+            <div class="container px-4">
                 <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
                     <h2><i class="fas fa-exclamation-circle text-danger"></i> Klachten</h2>
                 </div>

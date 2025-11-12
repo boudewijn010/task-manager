@@ -156,7 +156,7 @@ $username = $_SESSION['user_email'] ?? 'Gebruiker';
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item">
-                    <a class="nav-link" href="/complaints">
+                    <a class="nav-link" href="/tasks">
                         <i class="fas fa-exclamation-circle"></i> Klachten
                     </a>
                 </li>
@@ -275,7 +275,7 @@ $username = $_SESSION['user_email'] ?? 'Gebruiker';
                         <a href="/create-melding.php" class="btn btn-primary quick-action-btn">
                             <i class="fas fa-plus-circle"></i> Nieuwe Klacht Maken
                         </a>
-                        <a href="/complaints" class="btn btn-outline-primary quick-action-btn">
+                        <a href="/tasks" class="btn btn-outline-primary quick-action-btn">
                             <i class="fas fa-list"></i> Alle Klachten Bekijken
                         </a>
                     </div>
