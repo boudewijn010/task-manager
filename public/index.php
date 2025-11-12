@@ -157,7 +157,24 @@ try {
 
         // Also load complaints so they can be managed from the /tasks page
         try {
-            $stmt = $db->query('SELECT * FROM complaints ORDER BY created_at DESC');
+            // Create notes table if it doesn't exist
+            $db->exec("CREATE TABLE IF NOT EXISTS complaint_notes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                complaint_id INT NOT NULL,
+                user_email VARCHAR(255) NOT NULL,
+                note TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (complaint_id) REFERENCES complaints(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+            
+            // Get complaints with note count
+            $stmt = $db->query('
+                SELECT c.*, COUNT(cn.id) as note_count 
+                FROM complaints c 
+                LEFT JOIN complaint_notes cn ON c.id = cn.complaint_id 
+                GROUP BY c.id 
+                ORDER BY c.created_at DESC
+            ');
             $complaints = $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             $complaints = [];
@@ -197,7 +214,6 @@ try {
              <!-- DIT zIJN DE Klachten  -->
                 <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
                     <h2><i class="fas fa-exclamation-circle text-danger"></i> Klachten</h2>
-                    <a href="/complaints" class="btn btn-outline-danger">Alle klachten</a>
                 </div>
 
                 <?php if (!empty($complaints)): ?>
@@ -231,8 +247,14 @@ try {
 
                                         <div class="d-flex justify-content-between">
                                             <div>
-                                                <a href="/complaints/<?= $c['id'] ?>" class="btn btn-sm btn-outline-info">
-                                                    <i class="fas fa-eye"></i>
+                                                <a href="/complaint-detail.php?id=<?= $c['id'] ?>" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-eye"></i> Bekijken
+                                                </a>
+                                                <a href="/complaint-detail.php?id=<?= $c['id'] ?>#comments" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-sticky-note"></i> Notities
+                                                    <?php if (isset($c['note_count']) && $c['note_count'] > 0): ?>
+                                                        <span class="badge bg-danger"><?= $c['note_count'] ?></span>
+                                                    <?php endif; ?>
                                                 </a>
                                             </div>
 
