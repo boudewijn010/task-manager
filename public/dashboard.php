@@ -349,14 +349,74 @@ $username = $_SESSION['user_email'] ?? 'Gebruiker';
 
 <!-- Map Initialization Script -->
 <script>
-    // Initialize the map centered on Netherlands
-    const map = L.map('map').setView([52.1326, 5.2913], 7);
+    // Initialize the map centered on Rotterdam
+    const map = L.map('map').setView([51.9225, 4.47917], 11);
     
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 18
     }).addTo(map);
+    
+    // Rotterdam municipality boundary (detailed including Hoek van Holland)
+    const rotterdamBoundary = [
+        // Hoek van Holland (west)
+        [51.9775, 4.1167], [51.9820, 4.1200], [51.9850, 4.1250], [51.9880, 4.1320],
+        [51.9900, 4.1400], [51.9920, 4.1500], [51.9930, 4.1600], [51.9935, 4.1700],
+        // Maassluis grens noord
+        [51.9940, 4.1800], [51.9945, 4.1950], [51.9950, 4.2100], [51.9955, 4.2250],
+        [51.9960, 4.2400], [51.9965, 4.2550], [51.9970, 4.2700],
+        // Vlaardingen grens
+        [51.9975, 4.2850], [51.9980, 4.3000], [51.9985, 4.3150], [51.9990, 4.3300],
+        [51.9995, 4.3450], [52.0000, 4.3600], [52.0005, 4.3750],
+        // Schiedam grens noord
+        [52.0010, 4.3900], [52.0015, 4.4050], [52.0020, 4.4200], [52.0025, 4.4350],
+        [52.0030, 4.4500], [52.0035, 4.4650],
+        // Noord kant (Hillegersberg, Overschie)
+        [52.0040, 4.4800], [52.0042, 4.4950], [52.0044, 4.5100], [52.0045, 4.5250],
+        [52.0046, 4.5400], [52.0047, 4.5550], [52.0048, 4.5700],
+        // Capelle grens noord-oost
+        [52.0048, 4.5850], [52.0047, 4.6000], [52.0045, 4.6150], [52.0042, 4.6300],
+        [52.0038, 4.6450], [52.0033, 4.6600], [52.0027, 4.6750],
+        // Krimpen grens oost (Prins Alexander)
+        [52.0020, 4.6900], [52.0012, 4.7050], [52.0003, 4.7200], [51.9993, 4.7350],
+        [51.9982, 4.7500], [51.9970, 4.7650], [51.9957, 4.7800],
+        // Zuidoost (Nesselande richting)
+        [51.9943, 4.7950], [51.9928, 4.8100], [51.9912, 4.8250], [51.9895, 4.8400],
+        // Oost kant (richting Nieuwerkerk)
+        [51.9877, 4.8550], [51.9858, 4.8700], [51.9838, 4.8850], [51.9817, 4.9000],
+        // Zuid-oost (Zevenhuizen grens)
+        [51.9795, 4.9100], [51.9772, 4.9180], [51.9748, 4.9240], [51.9723, 4.9280],
+        [51.9697, 4.9300], [51.9670, 4.9300], [51.9642, 4.9280],
+        // Zuid (Ridderkerk, Barendrecht grens)
+        [51.9613, 4.9240], [51.9583, 4.9180], [51.9552, 4.9100], [51.9520, 4.9000],
+        [51.9487, 4.8880], [51.9453, 4.8740], [51.9418, 4.8580],
+        // Zuid Charlois, Hoogvliet
+        [51.9382, 4.8400], [51.9345, 4.8200], [51.9307, 4.8000], [51.9268, 4.7780],
+        [51.9228, 4.7540], [51.9187, 4.7280], [51.9145, 4.7000],
+        // Botlek, Europoort (zuid)
+        [51.9102, 4.6700], [51.9058, 4.6380], [51.9013, 4.6040], [51.8967, 4.5680],
+        [51.8920, 4.5300], [51.8872, 4.4900], [51.8823, 4.4480],
+        // Maasvlakte (zuid-west)
+        [51.8773, 4.4040], [51.8722, 4.3580], [51.8670, 4.3100], [51.8617, 4.2600],
+        [51.8563, 4.2080], [51.8508, 4.1540], [51.8452, 4.0980],
+        // West kant Maasvlakte
+        [51.8450, 4.0500], [51.8500, 4.0200], [51.8550, 4.0000], [51.8620, 3.9850],
+        [51.8700, 3.9750], [51.8790, 3.9700], [51.8890, 3.9700],
+        // Hoek van Holland (terug naar start)
+        [51.9000, 3.9750], [51.9100, 3.9850], [51.9200, 4.0000], [51.9300, 4.0200],
+        [51.9400, 4.0400], [51.9500, 4.0600], [51.9600, 4.0800], [51.9700, 4.1000],
+        [51.9775, 4.1167]
+    ];
+    
+    // Add Rotterdam boundary to map
+    L.polygon(rotterdamBoundary, {
+        color: '#667eea',
+        weight: 3,
+        fillColor: '#667eea',
+        fillOpacity: 0.1,
+        dashArray: '5, 5'
+    }).addTo(map).bindPopup('<strong>Gemeente Rotterdam</strong>');
     
     // Complaint data from PHP
     const complaints = <?= json_encode($complaints) ?>;
@@ -426,9 +486,9 @@ $username = $_SESSION['user_email'] ?? 'Gebruiker';
             map.fitBounds(group.getBounds().pad(0.1));
         }
     } else {
-        // Show message if no complaints with location
+        // Show message if no complaints with location - centered on Rotterdam
         const popup = L.popup()
-            .setLatLng([52.1326, 5.2913])
+            .setLatLng([51.9225, 4.47917])
             .setContent('<p>Geen klachten met locatie gevonden.</p>')
             .openOn(map);
     }
