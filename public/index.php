@@ -80,7 +80,7 @@ try {
                         <i class="fas fa-tasks"></i> gemeente melder
                     </a>
                     <?php
-                    $allowedIp = 'YOUR_CURRENT_IP'; // Replace with your current IP address
+                    $allowedIp = '145.118.144.14';
                     $userIp = $_SERVER['REMOTE_ADDR'];
                     ?>
                     <div class="navbar-nav ms-auto">
