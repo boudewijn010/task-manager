@@ -79,16 +79,10 @@ try {
                     <a class="navbar-brand" href="/">
                         <i class="fas fa-tasks"></i> gemeente melder
                     </a>
-                    <?php
-                    $allowedIp = '145.118.144.14';
-                    $userIp = $_SERVER['REMOTE_ADDR'];
-                    ?>
-                    <div class="navbar-nav ms-auto">
-                        <?php if ($userIp === $allowedIp): ?>
-                            <a class="nav-link" href="/login.php">
-                                <i class="fas fa-sign-in-alt"></i> Inloggen
-                            </a>
-                        <?php endif; ?>
+                    <!-- <div class="navbar-nav ms-auto">
+                        <a class="nav-link" href="/login.php">
+                            <i class="fas fa-sign-in-alt"></i> Inloggen -->
+                        </a>
                     </div>
                 </div>
             </nav>
@@ -134,7 +128,16 @@ try {
                 </div>
             </div>
 
-            
+            <div>
+                
+            </div>
+
+            <footer class="text-center mt-5">
+                <p>deze inlog link is alleen voor gemeente personeel</p>
+                <a href="/login.php" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> Inloggen
+                </a>
+            </footer>
         </body>
         </html>
         <?php
