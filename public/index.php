@@ -77,12 +77,18 @@ try {
             <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
                 <div class="container">
                     <a class="navbar-brand" href="/">
-                        <i class="fas fa-tasks"></i> Task Manager
+                        <i class="fas fa-tasks"></i> gemeente melder
                     </a>
+                    <?php
+                    $allowedIp = 'YOUR_CURRENT_IP'; // Replace with your current IP address
+                    $userIp = $_SERVER['REMOTE_ADDR'];
+                    ?>
                     <div class="navbar-nav ms-auto">
-                        <a class="nav-link" href="/login.php">
-                            <i class="fas fa-sign-in-alt"></i> Inloggen
-                        </a>
+                        <?php if ($userIp === $allowedIp): ?>
+                            <a class="nav-link" href="/login.php">
+                                <i class="fas fa-sign-in-alt"></i> Inloggen
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </nav>
@@ -90,15 +96,13 @@ try {
             <!-- Hero Section -->
             <div class="hero-section">
                 <div class="container text-center">
-                    <h1 class="display-4 mb-4">Welkom bij Task Manager</h1>
+                    <h1 class="display-4 mb-4">Welkom bij Gemeente melder</h1>
                     <p class="lead mb-4">Beheer uw taken en klachten op één centrale plek</p>
                     <div class="d-flex justify-content-center gap-3">
                         <a href="/create-melding.php" class="btn btn-light btn-lg px-4">
                             <i class="fas fa-plus-circle"></i> Nieuwe Melding
                         </a>
-                        <a href="/login.php" class="btn btn-outline-light btn-lg px-4">
-                            <i class="fas fa-sign-in-alt"></i> Inloggen
-                        </a>
+
                     </div>
                 </div>
             </div>
@@ -130,16 +134,7 @@ try {
                 </div>
             </div>
 
-            <!-- Call to Action -->
-            <div class="bg-light py-5">
-                <div class="container text-center">
-                    <h2>Klaar om te beginnen?</h2>
-                    <p class="lead mb-4">Log in om uw taken en klachten te beheren</p>
-                    <a href="/login.php" class="btn btn-primary btn-lg">
-                        <i class="fas fa-sign-in-alt"></i> Inloggen
-                    </a>
-                </div>
-            </div>
+            
         </body>
         </html>
         <?php
@@ -186,7 +181,7 @@ try {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Task Manager - Taken</title>
+            <title>Gemeente melder - Taken</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
             <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
         </head>
@@ -194,7 +189,7 @@ try {
             <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
                 <div class="container">
                     <a class="navbar-brand" href="/dashboard.php">
-                        <i class="fas fa-tasks"></i> Task Manager
+                        <i class="fas fa-tasks"></i> gemeente melder
                     </a>
                     <div class="navbar-nav">
                         <a class="nav-link" href="/dashboard.php">
@@ -340,7 +335,7 @@ try {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Klacht #<?= htmlspecialchars($complaint['id']) ?> - Task Manager</title>
+            <title>Klacht #<?= htmlspecialchars($complaint['id']) ?> - Gemeente Melder</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
             <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
             <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
